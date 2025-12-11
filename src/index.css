@@ -1,0 +1,74 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color: #e5e7eb;
+  background-color: #05060a;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --surface: #0f111a;
+  --surface-muted: #151824;
+  --surface-elevated: #1e2130;
+  --stroke: rgba(255, 255, 255, 0.08);
+  --muted: #9ca3af;
+  --primary: #60a5fa;
+  --primary-soft: rgba(96, 165, 250, 0.15);
+  --accent: #f472b6;
+  --success: #34d399;
+  --warning: #fbbf24;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top, rgba(15, 23, 42, 0.9), #030712 60%);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+input,
+textarea,
+select {
+  border-radius: 0.75rem;
+  border: 1px solid var(--stroke);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 0.85rem 1rem;
+  color: #f3f4f6;
+}
+
+textarea {
+  resize: vertical;
+}
+
+label {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
