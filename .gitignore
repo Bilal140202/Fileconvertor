@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+dist
+coverage
+.vscode
+.DS_Store
+.env*
+*.log
+pnpm-debug.log*
