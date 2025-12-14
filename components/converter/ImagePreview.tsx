@@ -29,7 +29,7 @@ export function ImagePreview({ title, fileName, mimeType, data, maxSize = 160 }:
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const blob = useMemo(() => new Blob([data], { type: mimeType }), [data, mimeType]);
+  const blob = useMemo(() => new Blob([data as BlobPart], { type: mimeType }), [data, mimeType]);
 
   useEffect(() => {
     const canvas = canvasRef.current;

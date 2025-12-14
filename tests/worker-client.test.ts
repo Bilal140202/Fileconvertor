@@ -2,12 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { useConversionQueue } from '../lib/store/useConversionQueue';
 import { createWorkerClient } from '../lib/utils/worker-client';
-import type { WorkerRequestMessage, WorkerResponseMessage } from '../lib/types/worker';
+import type { WorkerResponseMessage } from '../lib/types/worker';
 
 class MockWorker {
   private listeners = new Set<(e: MessageEvent<WorkerResponseMessage>) => void>();
 
-  postMessage(_message: WorkerRequestMessage, _transfer?: Transferable[]): void {
+  postMessage(): void {
     return;
   }
 

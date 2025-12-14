@@ -10,7 +10,8 @@
     "test:browser": "vitest run --config vitest.browser.config.ts"
   },
   "dependencies": {
-    "@img/sharp-wasm": "^0.0.7",
+    "@ffmpeg/ffmpeg": "^0.12.10",
+    "@ffmpeg/util": "^0.12.1",
     "@squoosh/lib": "^0.5.3",
     "jszip": "^3.10.1",
     "nanoid": "^5.0.9",

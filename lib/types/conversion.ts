@@ -60,3 +60,52 @@ export interface ImageConvertOptions extends ImageTransformOptions {
   outputFormat: ImageFormat;
   quality?: number;
 }
+
+export type VideoFormat = 'mp4' | 'webm' | 'mov' | 'mkv' | 'avi' | 'flv';
+export type VideoCodec = 'h264' | 'vp8' | 'vp9';
+export type AudioCodec = 'aac' | 'mp3' | 'opus' | 'vorbis';
+export type ScaleMode = 'fit' | 'fill' | 'stretch';
+
+export interface VideoConvertOptions {
+  outputFormat: VideoFormat;
+  codec?: VideoCodec;
+  bitrate?: number;
+  resolution?: {
+    width?: number;
+    height?: number;
+  };
+  frameRate?: number;
+  trim?: {
+    start?: number;
+    end?: number;
+  };
+  scaleMode?: ScaleMode;
+  audioTrack?: number;
+  subtitleTrack?: number;
+  burnSubtitles?: boolean;
+}
+
+export interface VideoMetadata {
+  duration?: number;
+  width?: number;
+  height?: number;
+  videoCodec?: string;
+  audioCodec?: string;
+  bitrate?: number;
+  frameRate?: number;
+  size?: number;
+}
+
+export type AudioFormat = 'mp3' | 'aac' | 'ogg' | 'wav' | 'flac';
+
+export interface AudioConvertOptions {
+  outputFormat: AudioFormat;
+  codec?: AudioCodec;
+  bitrate?: number;
+  sampleRate?: number;
+  channels?: number;
+  trim?: {
+    start?: number;
+    end?: number;
+  };
+}

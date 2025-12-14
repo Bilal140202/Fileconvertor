@@ -16,7 +16,7 @@ export interface CreateWorkerClientOptions {
 }
 
 function defaultWorkerFactory(): WorkerLike {
-  return new Worker(new URL('../../workers/conversion-worker.ts', import.meta.url), { type: 'module' });
+  return new Worker(new URL('../../workers/conversion-worker.ts', import.meta.url), { type: 'module' }) as unknown as WorkerLike;
 }
 
 export function createWorkerClient(options: CreateWorkerClientOptions = {}) {

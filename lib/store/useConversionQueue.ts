@@ -1,6 +1,12 @@
 import { create } from 'zustand';
 
-import type { ConversionOutput, ConversionProgress, ImageConvertOptions } from '../types/conversion';
+import type {
+  ConversionOutput,
+  ConversionProgress,
+  ImageConvertOptions,
+  VideoConvertOptions,
+  AudioConvertOptions
+} from '../types/conversion';
 import type { ConversionInput } from '../types/conversion';
 import { zipFiles } from '../utils/batch-zip';
 
@@ -12,11 +18,13 @@ export interface ConversionJobError {
   stack?: string;
 }
 
+export type ConversionOptions = ImageConvertOptions | VideoConvertOptions | AudioConvertOptions;
+
 export interface ConversionJob {
   id: string;
   batchId: string;
   input: ConversionInput;
-  options: ImageConvertOptions;
+  options: ConversionOptions;
   status: ConversionJobStatus;
   progress: ConversionProgress;
   result?: ConversionOutput;
@@ -185,7 +193,7 @@ export const useConversionQueue = create<ConversionQueueState>((set, get) => ({
 
     const entries = jobs
       .map((j) => j.result)
-      .filter(Boolean)
+      .filter((r): r is NonNullable<typeof r> => Boolean(r))
       .map((r) => ({ fileName: r.fileName, data: r.data }));
 
     const zipBytes = await zipFiles(entries);

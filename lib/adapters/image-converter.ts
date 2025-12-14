@@ -13,10 +13,6 @@ export class UnsupportedImageFormatError extends Error {
   }
 }
 
-function clampNumber(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
-}
-
 function buildOutputFileName(inputFileName: string, outputFormat: ImageFormat): string {
   const safeFormat = outputFormat === 'jpeg' ? 'jpg' : outputFormat;
   const dot = inputFileName.lastIndexOf('.');
@@ -24,15 +20,9 @@ function buildOutputFileName(inputFileName: string, outputFormat: ImageFormat): 
   return `${base}.${safeFormat}`;
 }
 
-async function loadSharp(): Promise<any> {
-  const mod: any = await import('@img/sharp-wasm');
-
-  const maybeInit = mod.initialize ?? mod.init ?? mod.default?.initialize ?? mod.default?.init;
-  if (typeof maybeInit === 'function') await maybeInit();
-
-  const sharp = mod.default ?? mod;
-  if (typeof sharp !== 'function') throw new Error('Failed to load @img/sharp-wasm');
-  return sharp;
+async function loadImageProcessor(): Promise<unknown> {
+  const { ImagePool } = await import('@squoosh/lib');
+  return new ImagePool(1);
 }
 
 export async function convertImage(
@@ -50,105 +40,55 @@ export async function convertImage(
   ctx.emitProgress({ percent: 0.02, stage: 'load', message: 'Loading codecs' });
   throwIfAborted(ctx.signal);
 
-  const sharp = await loadSharp();
+  const pool = await loadImageProcessor();
 
   ctx.emitProgress({ percent: 0.06, stage: 'decode', message: `Decoding ${inputFormat}` });
   throwIfAborted(ctx.signal);
 
-  let pipeline = sharp(input.data);
+  const image = (pool as { ingestImage: (data: Uint8Array) => unknown }).ingestImage(input.data);
 
-  if (options.crop) {
-    ctx.emitProgress({ percent: 0.18, stage: 'crop', message: 'Cropping' });
-    throwIfAborted(ctx.signal);
-    pipeline = pipeline.extract({
-      left: Math.max(0, Math.floor(options.crop.x)),
-      top: Math.max(0, Math.floor(options.crop.y)),
-      width: Math.max(1, Math.floor(options.crop.width)),
-      height: Math.max(1, Math.floor(options.crop.height))
-    });
-  }
+  const preprocessOptions: Record<string, unknown> = {};
 
   if (options.resize?.width || options.resize?.height) {
-    ctx.emitProgress({ percent: 0.3, stage: 'resize', message: 'Resizing' });
+    ctx.emitProgress({ percent: 0.2, stage: 'resize', message: 'Resizing' });
     throwIfAborted(ctx.signal);
-    pipeline = pipeline.resize({
+    preprocessOptions.resize = {
+      enabled: true,
       width: options.resize.width,
-      height: options.resize.height,
-      fit: options.resize.fit ?? 'inside'
-    });
+      height: options.resize.height
+    };
   }
 
-  if (typeof options.rotate === 'number' && Number.isFinite(options.rotate) && options.rotate !== 0) {
-    ctx.emitProgress({ percent: 0.42, stage: 'rotate', message: 'Rotating' });
+  if (options.rotate) {
+    ctx.emitProgress({ percent: 0.35, stage: 'rotate', message: 'Rotating' });
     throwIfAborted(ctx.signal);
-    pipeline = pipeline.rotate(options.rotate);
+    preprocessOptions.rotate = {
+      enabled: true,
+      numRotations: Math.round(options.rotate / 90) % 4
+    };
   }
 
-  if (options.flip) {
-    ctx.emitProgress({ percent: 0.48, stage: 'flip', message: 'Flipping' });
-    throwIfAborted(ctx.signal);
-    pipeline = pipeline.flip();
-  }
+  await (image as { preprocess: (options: Record<string, unknown>) => Promise<void> }).preprocess(preprocessOptions);
 
-  if (options.flop) {
-    ctx.emitProgress({ percent: 0.52, stage: 'flop', message: 'Flopping' });
-    throwIfAborted(ctx.signal);
-    pipeline = pipeline.flop();
-  }
-
-  if (options.filters) {
-    const { brightness, contrast, saturation, hue } = options.filters;
-
-    const hasModulate =
-      typeof brightness === 'number' || typeof saturation === 'number' || typeof hue === 'number';
-
-    if (hasModulate) {
-      ctx.emitProgress({ percent: 0.6, stage: 'filters', message: 'Applying filters' });
-      throwIfAborted(ctx.signal);
-      pipeline = pipeline.modulate({
-        brightness: typeof brightness === 'number' ? 1 + clampNumber(brightness, -100, 100) / 100 : undefined,
-        saturation: typeof saturation === 'number' ? 1 + clampNumber(saturation, -100, 100) / 100 : undefined,
-        hue: typeof hue === 'number' ? clampNumber(hue, -180, 180) : undefined
-      });
-    }
-
-    if (typeof contrast === 'number' && Number.isFinite(contrast) && contrast !== 0) {
-      const c = 1 + clampNumber(contrast, -100, 100) / 100;
-      const b = -(128 * c) + 128;
-      pipeline = pipeline.linear(c, b);
-    }
-  }
-
-  const shouldFlatten = outputFormat === 'jpeg' || outputFormat === 'bmp';
-  if (shouldFlatten) {
-    pipeline = pipeline.flatten({ background: options.backgroundColor ?? '#ffffff' });
-  }
-
-  ctx.emitProgress({ percent: 0.74, stage: 'encode', message: `Encoding ${outputFormat}` });
+  ctx.emitProgress({ percent: 0.6, stage: 'encode', message: `Encoding ${outputFormat}` });
   throwIfAborted(ctx.signal);
 
-  const quality = typeof options.quality === 'number' ? clampNumber(options.quality, 1, 100) : undefined;
+  const quality = options.quality ?? 80;
+
+  const encodeOptions: Record<string, unknown> = {};
+
+  if (outputFormat === 'png') {
+    encodeOptions.oxipng = { quality };
+  } else if (outputFormat === 'jpeg') {
+    encodeOptions.mozjpeg = { quality };
+  } else if (outputFormat === 'webp') {
+    encodeOptions.webp = { quality };
+  } else {
+    throw new UnsupportedImageFormatError(`Unsupported output format: ${outputFormat}`, outputFormat);
+  }
 
   try {
-    if (outputFormat === 'png') {
-      pipeline = pipeline.toFormat('png', {
-        compressionLevel: quality == null ? undefined : clampNumber(9 - Math.round((quality / 100) * 9), 0, 9)
-      });
-    } else if (outputFormat === 'jpeg') {
-      pipeline = pipeline.toFormat('jpeg', { quality, mozjpeg: true });
-    } else if (outputFormat === 'webp') {
-      pipeline = pipeline.toFormat('webp', { quality });
-    } else if (outputFormat === 'gif') {
-      pipeline = pipeline.toFormat('gif');
-    } else if (outputFormat === 'tiff') {
-      pipeline = pipeline.toFormat('tiff', { quality });
-    } else if (outputFormat === 'ico') {
-      pipeline = pipeline.toFormat('ico');
-    } else if (outputFormat === 'bmp') {
-      pipeline = pipeline.toFormat('bmp');
-    } else {
-      throw new UnsupportedImageFormatError(`Unsupported output format: ${outputFormat}`, outputFormat);
-    }
+    await (image as { encode: (options: Record<string, unknown>) => Promise<void> }).encode(encodeOptions);
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     throw new UnsupportedImageFormatError(message, outputFormat);
@@ -157,7 +97,21 @@ export async function convertImage(
   ctx.emitProgress({ percent: 0.9, stage: 'render', message: 'Rendering output' });
   throwIfAborted(ctx.signal);
 
-  const outputBuffer: Uint8Array = await pipeline.toBuffer();
+  let outputBuffer: Uint8Array;
+
+  const encodedWith = (image as { encodedWith: Record<string, Promise<{ binary: Uint8Array }> | undefined> }).encodedWith;
+
+  if (outputFormat === 'png' && encodedWith.oxipng !== undefined) {
+    outputBuffer = (await encodedWith.oxipng).binary;
+  } else if (outputFormat === 'jpeg' && encodedWith.mozjpeg !== undefined) {
+    outputBuffer = (await encodedWith.mozjpeg).binary;
+  } else if (outputFormat === 'webp' && encodedWith.webp !== undefined) {
+    outputBuffer = (await encodedWith.webp).binary;
+  } else {
+    throw new UnsupportedImageFormatError(`Failed to encode as ${outputFormat}`, outputFormat);
+  }
+
+  await (pool as { close: () => Promise<void> }).close();
 
   ctx.emitProgress({ percent: 1, stage: 'complete' });
 

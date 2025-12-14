@@ -68,3 +68,21 @@ export function isSupportedImageMimeType(mimeType: string): boolean {
     return false;
   }
 }
+
+export function isSupportedVideoMimeType(mimeType: string): boolean {
+  const mime = mimeType.toLowerCase().split(';')[0]?.trim();
+  return mime.startsWith('video/');
+}
+
+export function isSupportedAudioMimeType(mimeType: string): boolean {
+  const mime = mimeType.toLowerCase().split(';')[0]?.trim();
+  return mime.startsWith('audio/');
+}
+
+export function getMediaType(mimeType: string): 'image' | 'video' | 'audio' | null {
+  const mime = mimeType.toLowerCase().split(';')[0]?.trim();
+  if (mime.startsWith('image/')) return 'image';
+  if (mime.startsWith('video/')) return 'video';
+  if (mime.startsWith('audio/')) return 'audio';
+  return null;
+}
