@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { InvalidPasswordError } from '../../lib/errors.js';
-import { createArchive, extractArchive } from '../../lib/adapters/archive-converter.js';
+import { InvalidPasswordError } from '../../lib/errors';
+import { createArchive, extractArchive } from '../../lib/adapters/archive-converter';
 
 const enc = new TextEncoder();
 

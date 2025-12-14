@@ -8,9 +8,9 @@ import {
   scryptSync
 } from 'node:crypto';
 
-import { InvalidPasswordError, UnsupportedArchiveFormatError } from '../errors.js';
-import type { FileEntry, ProgressCallback } from '../types.js';
-import { shouldIncludePath, type PathFilter } from '../utils/filters.js';
+import { InvalidPasswordError, UnsupportedArchiveFormatError } from '../errors';
+import type { FileEntry, ProgressCallback } from '../types/files';
+import { shouldIncludePath, type PathFilter } from '../utils/filters';
 
 export type ArchiveFormat = 'zip' | 'tar' | 'tar.gz' | 'tgz' | '7z' | 'rar';
 

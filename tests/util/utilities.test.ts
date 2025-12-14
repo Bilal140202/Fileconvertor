@@ -9,9 +9,9 @@ import {
   rgbToCmyk,
   rgbToHex,
   rgbToHsl
-} from '../../lib/adapters/color-utils.js';
-import { convertUnit, getUnitCategories } from '../../lib/adapters/unit-converter.js';
-import { generateQrSvg } from '../../lib/adapters/qr-utils.js';
+} from '../../lib/adapters/color-utils';
+import { convertUnit, getUnitCategories } from '../../lib/adapters/unit-converter';
+import { generateQrSvg } from '../../lib/adapters/qr-utils';
 
 describe('color-utils', () => {
   it('validates hex colors', () => {

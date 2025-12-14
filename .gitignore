@@ -1,6 +1,8 @@
-node_modules/
-dist/
-coverage/
-.vitest/
-*.log
+node_modules
 .DS_Store
+dist
+coverage
+.vitest
+.vscode
+*.log
+pnpm-debug.log*

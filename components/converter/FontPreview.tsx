@@ -1,13 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import opentype from 'opentype.js';
 
 export interface FontPreviewProps {
   fontData: Uint8Array;
-  metadata?: {
-    family?: string;
-    subfamily?: string;
-    weightClass?: number;
-  };
   initialSampleText?: string;
   maxGlyphs?: number;
 }
@@ -18,10 +13,9 @@ function toArrayBuffer(u8: Uint8Array): ArrayBuffer {
 
 export function FontPreview({
   fontData,
-  metadata,
   initialSampleText = 'The quick brown fox jumps over the lazy dog',
   maxGlyphs = 96
-}: FontPreviewProps): JSX.Element {
+}: FontPreviewProps) {
   const [sampleText, setSampleText] = useState(initialSampleText);
 
   const font = useMemo(() => {
@@ -32,9 +26,23 @@ export function FontPreview({
     }
   }, [fontData]);
 
+  const sampleSvg = useMemo(() => {
+    if (!font) return null;
+    const fontSize = 56;
+    const path = font.getPath(sampleText, 0, fontSize, fontSize);
+    const bbox = path.getBoundingBox();
+    const width = Math.max(1, bbox.x2 - bbox.x1);
+    const height = Math.max(1, bbox.y2 - bbox.y1);
+
+    return {
+      viewBox: `${bbox.x1} ${bbox.y1} ${width} ${height}`,
+      d: path.toPathData(2)
+    };
+  }, [font, sampleText]);
+
   const glyphs = useMemo(() => {
     if (!font) return [];
-    const out: any[] = [];
+    const out: opentype.Glyph[] = [];
     for (let i = 0; i < font.glyphs.length && out.length < maxGlyphs; i++) {
       const g = font.glyphs.get(i);
       if (!g) continue;
@@ -45,24 +53,16 @@ export function FontPreview({
 
   return (
     <div style={{ display: 'grid', gap: 12 }}>
-      <div>
-        <div style={{ fontWeight: 600 }}>Font Preview</div>
-        {metadata?.family ? (
-          <div style={{ color: '#555' }}>
-            {metadata.family} {metadata.subfamily ? `— ${metadata.subfamily}` : ''}{' '}
-            {metadata.weightClass ? `(w${metadata.weightClass})` : ''}
-          </div>
-        ) : null}
-      </div>
-
       <label style={{ display: 'grid', gap: 4 }}>
-        <span style={{ fontSize: 12, color: '#555' }}>Sample text</span>
-        <input value={sampleText} onChange={(e) => setSampleText(e.target.value)} style={{ padding: 8, border: '1px solid #ddd', borderRadius: 6 }} />
+        <span style={{ fontSize: 12, opacity: 0.75 }}>Sample text</span>
+        <input value={sampleText} onChange={(e) => setSampleText(e.target.value)} style={{ padding: 8, border: '1px solid #ddd' }} />
       </label>
 
-      <div style={{ padding: 12, border: '1px solid #eee', borderRadius: 8, minHeight: 64 }}>
-        {font ? (
-          <div style={{ fontFamily: 'inherit' }}>{sampleText}</div>
+      <div style={{ padding: 12, border: '1px solid #eee' }}>
+        {sampleSvg ? (
+          <svg width="100%" height={80} viewBox={sampleSvg.viewBox} preserveAspectRatio="xMinYMid meet">
+            <path d={sampleSvg.d} fill="currentColor" />
+          </svg>
         ) : (
           <div style={{ color: '#b91c1c' }}>Unable to parse font</div>
         )}
@@ -73,12 +73,13 @@ export function FontPreview({
           const size = 40;
           const path = g.getPath(8, 32, 28);
           const d = path.toPathData(2);
+          const unicode = g.unicode;
           return (
-            <div key={idx} style={{ border: '1px solid #eee', borderRadius: 8, padding: 6, textAlign: 'center' }}>
+            <div key={idx} style={{ border: '1px solid #eee', padding: 6, textAlign: 'center' }}>
               <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
                 <path d={d} fill="currentColor" />
               </svg>
-              <div style={{ fontSize: 10, color: '#666' }}>{g.unicode ? `U+${g.unicode.toString(16).toUpperCase()}` : ''}</div>
+              <div style={{ fontSize: 10, opacity: 0.7 }}>{unicode != null ? `U+${unicode.toString(16).toUpperCase()}` : ''}</div>
             </div>
           );
         })}

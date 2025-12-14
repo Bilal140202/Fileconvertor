@@ -1,7 +1,7 @@
 import { createFont, woff2 } from 'fonteditor-core';
 import opentype from 'opentype.js';
 
-import type { ByteArray } from '../types.js';
+import type { ByteArray } from '../types/files';
 
 export type FontFormat = 'ttf' | 'otf' | 'woff' | 'woff2';
 

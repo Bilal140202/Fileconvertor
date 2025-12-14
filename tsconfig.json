@@ -1,16 +1,24 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
     "strict": true,
     "skipLibCheck": true,
-    "jsx": "react-jsx",
-    "types": ["node"],
-    "outDir": "dist"
+    "noEmit": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "types": ["vitest/globals", "node"]
   },
-  "include": ["lib/**/*.ts", "lib/**/*.tsx", "tests/**/*.ts", "tests/**/*.tsx"]
+  "include": [
+    "lib/**/*",
+    "workers/**/*",
+    "components/**/*",
+    "tests/**/*",
+    "vitest.config.ts",
+    "vitest.browser.config.ts"
+  ]
 }

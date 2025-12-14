@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import opentype from 'opentype.js';
 
-import { convertFont } from '../../lib/adapters/font-converter.js';
+import { convertFont } from '../../lib/adapters/font-converter';
 
 function makeTestTtf(): Uint8Array {
   const empty = new opentype.Path();

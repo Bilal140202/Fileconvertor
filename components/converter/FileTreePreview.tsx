@@ -1,4 +1,4 @@
-import React from 'react';
+import type { CSSProperties } from 'react';
 
 export interface FileTreePreviewEntry {
   path: string;
@@ -22,7 +22,7 @@ function formatBytes(bytes: number): string {
   return `${value.toFixed(value < 10 ? 2 : value < 100 ? 1 : 0)} ${units[unit]}`;
 }
 
-function badgeStyle(bg: string): React.CSSProperties {
+function badgeStyle(bg: string): CSSProperties {
   return {
     display: 'inline-block',
     padding: '2px 8px',
@@ -35,7 +35,7 @@ function badgeStyle(bg: string): React.CSSProperties {
   };
 }
 
-export function FileTreePreview({ entries }: FileTreePreviewProps): JSX.Element {
+export function FileTreePreview({ entries }: FileTreePreviewProps) {
   const sorted = [...entries].sort((a, b) => a.path.localeCompare(b.path));
 
   return (
@@ -51,7 +51,13 @@ export function FileTreePreview({ entries }: FileTreePreviewProps): JSX.Element 
         <tbody>
           {sorted.map((e) => (
             <tr key={e.path}>
-              <td style={{ padding: 8, borderBottom: '1px solid #f0f0f0', fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' }}>
+              <td
+                style={{
+                  padding: 8,
+                  borderBottom: '1px solid #f0f0f0',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace'
+                }}
+              >
                 {e.path}
               </td>
               <td style={{ padding: 8, borderBottom: '1px solid #f0f0f0', textAlign: 'right' }}>

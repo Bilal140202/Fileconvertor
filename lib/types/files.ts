@@ -1,9 +1,7 @@
 export type ByteArray = Uint8Array;
 
-export type FilePath = string;
-
 export interface FileEntry {
-  path: FilePath;
+  path: string;
   data: ByteArray;
   mtime?: Date;
 }
