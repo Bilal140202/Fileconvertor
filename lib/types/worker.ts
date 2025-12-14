@@ -1,11 +1,18 @@
-import type { ConversionInput, ConversionOutput, ConversionProgress, ImageConvertOptions } from './conversion';
+import type {
+  AudioConvertOptions,
+  ConversionInput,
+  ConversionOutput,
+  ConversionProgress,
+  ImageConvertOptions
+} from './conversion';
 
 export type WorkerRequestMessage =
   | {
       type: 'CONVERT';
       jobId: string;
+      adapterId: 'image-converter' | 'audio-converter';
       input: ConversionInput;
-      options: ImageConvertOptions;
+      options: ImageConvertOptions | AudioConvertOptions;
     }
   | {
       type: 'ABORT';

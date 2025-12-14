@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 
-import type { ConversionInput, ImageConvertOptions } from '../types/conversion';
+import type { AudioConvertOptions, ConversionInput, ImageConvertOptions } from '../types/conversion';
 import type { WorkerRequestMessage, WorkerResponseMessage } from '../types/worker';
 import { useConversionQueue } from '../store/useConversionQueue';
 
@@ -18,6 +18,8 @@ export interface CreateWorkerClientOptions {
 function defaultWorkerFactory(): WorkerLike {
   return new Worker(new URL('../../workers/conversion-worker.ts', import.meta.url), { type: 'module' });
 }
+
+const MAX_RETRIES = 2;
 
 export function createWorkerClient(options: CreateWorkerClientOptions = {}) {
   const worker = (options.workerFactory ?? defaultWorkerFactory)();
@@ -37,27 +39,56 @@ export function createWorkerClient(options: CreateWorkerClientOptions = {}) {
     }
 
     if (msg.type === 'ERROR') {
-      queue.updateJobError(msg.jobId, msg.error);
+      const job = queue.jobs[msg.jobId];
+      const retryCount = job?.retryCount ?? 0;
+
+      if (
+        msg.error.name === 'AudioDecodeError' &&
+        retryCount < MAX_RETRIES &&
+        job?.adapterId === 'audio-converter'
+      ) {
+        const updatedJob = { ...job, retryCount: retryCount + 1 };
+        queue.addJob(updatedJob);
+
+        const transferableInput: ConversionInput = { ...job.input, data: job.input.data.slice() };
+        const retryMsg: WorkerRequestMessage = {
+          type: 'CONVERT',
+          jobId: msg.jobId,
+          adapterId: job.adapterId,
+          input: transferableInput,
+          options: job.options
+        };
+        worker.postMessage(retryMsg, [transferableInput.data.buffer]);
+      } else {
+        queue.updateJobError(msg.jobId, msg.error);
+      }
     }
   };
 
   worker.addEventListener('message', onMessage);
 
-  function enqueueConversion(input: ConversionInput, options: ImageConvertOptions, batchId: string): string {
+  function enqueueConversion(
+    adapterId: 'image-converter' | 'audio-converter',
+    input: ConversionInput,
+    options: ImageConvertOptions | AudioConvertOptions,
+    batchId: string
+  ): string {
     const jobId = nanoid();
     const queue = useConversionQueue.getState();
 
     queue.addJob({
       id: jobId,
       batchId,
+      adapterId,
       input,
       options,
       status: 'queued',
-      progress: { percent: 0, stage: 'queued' }
+      progress: { percent: 0, stage: 'queued' },
+      retryCount: 0
     });
 
     const transferableInput: ConversionInput = { ...input, data: input.data.slice() };
-    const msg: WorkerRequestMessage = { type: 'CONVERT', jobId, input: transferableInput, options };
+    const msg: WorkerRequestMessage = { type: 'CONVERT', jobId, adapterId, input: transferableInput, options };
     worker.postMessage(msg, [transferableInput.data.buffer]);
 
     return jobId;

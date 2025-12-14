@@ -26,15 +26,29 @@ self.addEventListener('message', async (event: MessageEvent<WorkerRequestMessage
   controllers.set(msg.jobId, controller);
 
   try {
-    const { convertImage } = await import('../lib/adapters/image-converter');
+    let result;
 
-    const result = await convertImage(msg.input, msg.options, {
-      signal: controller.signal,
-      emitProgress: (progress) => {
-        const progressMsg: WorkerResponseMessage = { type: 'PROGRESS', jobId: msg.jobId, progress };
-        self.postMessage(progressMsg);
-      }
-    });
+    if (msg.adapterId === 'image-converter') {
+      const { convertImage } = await import('../lib/adapters/image-converter');
+      result = await convertImage(msg.input, msg.options, {
+        signal: controller.signal,
+        emitProgress: (progress) => {
+          const progressMsg: WorkerResponseMessage = { type: 'PROGRESS', jobId: msg.jobId, progress };
+          self.postMessage(progressMsg);
+        }
+      });
+    } else if (msg.adapterId === 'audio-converter') {
+      const { convertAudio } = await import('../lib/adapters/audio-converter');
+      result = await convertAudio(msg.input, msg.options, {
+        signal: controller.signal,
+        emitProgress: (progress) => {
+          const progressMsg: WorkerResponseMessage = { type: 'PROGRESS', jobId: msg.jobId, progress };
+          self.postMessage(progressMsg);
+        }
+      });
+    } else {
+      throw new Error(`Unknown adapter: ${msg.adapterId}`);
+    }
 
     const completeMsg: WorkerResponseMessage = { type: 'COMPLETE', jobId: msg.jobId, result };
     self.postMessage(completeMsg, [result.data.buffer]);

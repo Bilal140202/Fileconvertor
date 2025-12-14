@@ -19,6 +19,7 @@
     "components/**/*",
     "tests/**/*",
     "vitest.config.ts",
-    "vitest.browser.config.ts"
+    "vitest.browser.config.ts",
+    "wavesurfer.d.ts"
   ]
 }
