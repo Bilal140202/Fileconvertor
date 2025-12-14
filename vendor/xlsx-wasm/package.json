@@ -1,0 +1,10 @@
+{
+  "name": "xlsx-wasm",
+  "version": "0.0.0",
+  "private": true,
+  "main": "./index.js",
+  "types": "./index.d.ts",
+  "dependencies": {
+    "jszip": "^3.10.1"
+  }
+}
