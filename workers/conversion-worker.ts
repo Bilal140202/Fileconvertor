@@ -26,15 +26,29 @@ self.addEventListener('message', async (event: MessageEvent<WorkerRequestMessage
   controllers.set(msg.jobId, controller);
 
   try {
-    const { convertImage } = await import('../lib/adapters/image-converter');
+    const mimeType = msg.input.mimeType.toLowerCase();
+    let result;
 
-    const result = await convertImage(msg.input, msg.options, {
+    const context = {
       signal: controller.signal,
-      emitProgress: (progress) => {
+      emitProgress: (progress: { percent: number; stage?: string; message?: string }) => {
         const progressMsg: WorkerResponseMessage = { type: 'PROGRESS', jobId: msg.jobId, progress };
         self.postMessage(progressMsg);
       }
-    });
+    };
+
+    if (mimeType.startsWith('image/')) {
+      const { convertImage } = await import('../lib/adapters/image-converter');
+      result = await convertImage(msg.input, msg.options as never, context);
+    } else if (mimeType.startsWith('video/')) {
+      const { convertVideo } = await import('../lib/adapters/video-converter');
+      result = await convertVideo(msg.input, msg.options as never, context);
+    } else if (mimeType.startsWith('audio/')) {
+      const { convertAudio } = await import('../lib/adapters/audio-converter');
+      result = await convertAudio(msg.input, msg.options as never, context);
+    } else {
+      throw new Error(`Unsupported MIME type: ${msg.input.mimeType}`);
+    }
 
     const completeMsg: WorkerResponseMessage = { type: 'COMPLETE', jobId: msg.jobId, result };
     self.postMessage(completeMsg, [result.data.buffer]);

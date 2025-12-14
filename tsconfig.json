@@ -18,7 +18,9 @@
     "workers/**/*",
     "components/**/*",
     "tests/**/*",
-    "vitest.config.ts",
+    "vitest.config.ts"
+  ],
+  "exclude": [
     "vitest.browser.config.ts"
   ]
 }
