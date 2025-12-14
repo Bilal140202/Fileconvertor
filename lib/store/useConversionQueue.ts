@@ -1,6 +1,11 @@
 import { create } from 'zustand';
 
-import type { ConversionOutput, ConversionProgress, ImageConvertOptions } from '../types/conversion';
+import type {
+  AudioConvertOptions,
+  ConversionOutput,
+  ConversionProgress,
+  ImageConvertOptions
+} from '../types/conversion';
 import type { ConversionInput } from '../types/conversion';
 import { zipFiles } from '../utils/batch-zip';
 
@@ -15,14 +20,16 @@ export interface ConversionJobError {
 export interface ConversionJob {
   id: string;
   batchId: string;
+  adapterId: 'image-converter' | 'audio-converter';
   input: ConversionInput;
-  options: ImageConvertOptions;
+  options: ImageConvertOptions | AudioConvertOptions;
   status: ConversionJobStatus;
   progress: ConversionProgress;
   result?: ConversionOutput;
   error?: ConversionJobError;
   createdAt: number;
   updatedAt: number;
+  retryCount?: number;
 }
 
 export interface ConversionBatchDownload {

@@ -60,3 +60,41 @@ export interface ImageConvertOptions extends ImageTransformOptions {
   outputFormat: ImageFormat;
   quality?: number;
 }
+
+export type AudioFormat =
+  | 'mp3'
+  | 'wav'
+  | 'ogg'
+  | 'aac'
+  | 'flac'
+  | 'wma'
+  | 'opus';
+
+export type AudioEQPreset = 'bass_boost' | 'treble_boost' | 'vocal' | 'flat';
+
+export interface AudioConvertOptions {
+  outputFormat: AudioFormat;
+  codec?: string;
+  bitrate?: string;
+  sampleRate?: number;
+  channels?: number;
+  trim?: {
+    start: number;
+    end: number;
+  };
+  speed?: number;
+  volumeNormalization?: boolean;
+  fade?: {
+    in?: number;
+    out?: number;
+  };
+  eqPreset?: AudioEQPreset;
+  metadata?: {
+    title?: string;
+    artist?: string;
+    album?: string;
+    year?: string;
+    genre?: string;
+    comment?: string;
+  };
+}
