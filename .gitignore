@@ -1,4 +1,4 @@
-node_modules
+﻿node_modules
 .DS_Store
 dist
 coverage
@@ -6,3 +6,17 @@ coverage
 .vscode
 *.log
 pnpm-debug.log*
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE / Editor
+.idea/
+.vscode/
+
+# Build artifacts
+dist/
+build/
+.env
+
